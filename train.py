@@ -6,10 +6,9 @@ import os
 from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
 from torch.autograd import Variable
-from adabelief_pytorch import AdaBelief
-from ranger21 import ranger21
-
-
+#from adabelief_pytorch import AdaBelief
+#from ranger21 import ranger21
+from radam import RAdam
 """ 使用可使用的gpu """
 
 
@@ -52,14 +51,19 @@ if __name__ == "__main__":
                             rectify=True)
     """
     #  创建优化器Ranger21
-    g_optimizer = ranger21.Ranger21(generator.parameters(), lr=0.001, num_epochs=para.n_epoch,
-                                    use_warmup=False,
-                                    warmdown_active=False,
-                                    num_batches_per_epoch=len(m_dataset.clean_files))
-    d_optimizer = ranger21.Ranger21(discriminator.parameters(), lr=0.001, num_epochs=para.n_epoch,
-                                    use_warmup=False,
-                                    warmdown_active=False,
-                                    num_batches_per_epoch=len(m_dataset.clean_files))
+    # g_optimizer = ranger21.Ranger21(generator.parameters(), lr=0.001, num_epochs=para.n_epoch,
+    #                                 use_warmup=False,
+    #                                 warmdown_active=False,
+    #                                 num_batches_per_epoch=len(m_dataset.clean_files))
+    # d_optimizer = ranger21.Ranger21(discriminator.parameters(), lr=0.001, num_epochs=para.n_epoch,
+    #                                 use_warmup=False,
+    #                                 warmdown_active=False,
+    #                                 num_batches_per_epoch=len(m_dataset.clean_files))
+
+
+    #  创建优化器radam
+    g_optimizer = RAdam(generator.parameters(), lr=0.0001)
+    d_optimizer = RAdam(discriminator.parameters(), lr=0.0001)
 
     #  获取ref_batch
     ref_batch = m_dataset.ref_batch(para.ref_batch_size)
