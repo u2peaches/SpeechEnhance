@@ -133,5 +133,5 @@ if __name__ == "__main__":
 
         g_model_name = os.path.join(para.save_path, "G_" + str(epoch) + "_%.4f" % g_cond_loss + ".pkl")
         d_model_name = os.path.join(para.save_path, "D_" + str(epoch) + "_%.4f" % noisy_loss + ".pkl")
-        torch.sava(generator.state_dict(), g_model_name)
+        torch.save(generator.state_dict(), g_model_name)
         torch.save(discriminator.state_dict(), d_model_name)
