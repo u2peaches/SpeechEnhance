@@ -64,22 +64,24 @@ def get_snr(clean, noisy):
 if __name__ == "__main__":
     para = hparams()
 
-    path_eval = 'eval147'
+    path_eval = 'eval123/'
     os.makedirs(path_eval, exist_ok=True)
 
     # 加载模型
     n_epoch = 0
-    model_file = "save/voicebank/2022-4-14_RMSProp/G_21_0.4042.pkl"
+    # model_file = "save/model/2022-4-14_RMSProp/G_21_0.4042.pkl"
+    model_file = "save/model/proportional_distribution/G_8_0.3678.pkl"
+    load_model = torch.load(model_file, map_location='cpu')
+
 
     generator = Generator()
-    generator.load_state_dict(torch.load(model_file, map_location='cpu'))
+    generator.load_state_dict(load_model['model'])
 
-    path_test_clean = 'dataset/voicebank/clean_testset_wav/'
-    path_test_noisy = 'dataset/voicebank/noisy_testset_wav/'
-
+    # path_test_clean = 'dataset/voicebank/clean_testset_wav/'
+    # path_test_noisy = 'dataset/voicebank/noisy_testset_wav/'
     """ 对中文语音的训练 """
-    # path_test_clean = 'dataset/data_thchs30/train'
-    # path_test_noisy = 'dataset/data_thchs30/train_noisy\CAFE-CAFE-2/0/'
+    path_test_clean = 'dataset/data_thchs30/test/'
+    path_test_noisy = 'dataset/data_thchs30/test_noisy/STREET-CITY-1/7.5/'
 
     test_clean_wavs = glob.glob(path_test_clean + '/*wav')
 
@@ -87,39 +89,43 @@ if __name__ == "__main__":
     fs = para.fs
     for clean_file in test_clean_wavs:
         name = os.path.split(clean_file)[-1]
-        noisy_file = os.path.join(path_test_noisy, name)
-        if not os.path.isfile(noisy_file):
-            continue
-        if w == 10:
-            break
-        w += 1
-        #  读取干净语音
-        clean, _ = librosa.load(clean_file, sr=fs, mono=True)
-        noisy, _ = librosa.load(noisy_file, sr=fs, mono=True)
+        # print("process on %s" % (clean_file))
+        for root, dirs, files in os.walk(path_test_noisy):
+            file_noisy_name = os.path.join(root, name)
+            file_noisy_name = file_noisy_name.replace("\\", "/")
+            if not os.path.exists(file_noisy_name):
+                continue
+            if w == 10:
+                break
+            w += 1
+            #  读取干净语音
+            clean, _ = librosa.load(clean_file, sr=fs, mono=True)
+            noisy, _ = librosa.load(file_noisy_name, sr=fs, mono=True)
 
-        snr = get_snr(clean, noisy)
-        print("%s  snr=%.2f" % (noisy_file, snr))
+            snr = get_snr(clean, noisy)
+            print("%s  snr=%.2f" % (file_noisy_name, snr))
 
-        if snr <= 0:
-            # print('processing &s with snr %.2f' % (noisy_file, snr))
+            if snr <= 0:
+                # print('processing &s with snr %.2f' % (noisy_file, snr))
 
-            # 获取增强语音
-            enh = enh_segan(generator, noisy, para)
+                # 获取增强语音
+                enh = enh_segan(generator, noisy, para)
 
-            # 语音保存
-            sf.write(os.path.join(path_eval, 'noisy-' + name), noisy, fs)
-            sf.write(os.path.join(path_eval, 'clean-' + name), clean, fs)
-            sf.write(os.path.join(path_eval, 'enh-' + name), enh, fs)
+                # 语音保存
+                sf.write(os.path.join(path_eval, 'noised_wav/', 'noisy-' + name), noisy, fs)
+                sf.write(os.path.join(path_eval, 'clean_wav/', 'clean-' + name), clean, fs)
+                sf.write(os.path.join(path_eval, 'denoised_wav/', 'enh-' + name), enh, fs)
 
-            # 画频谱图
-            fig_name = os.path.join(path_eval, name[:-4] + '-' + str(n_epoch) + ".jpg")
+                # 画频谱图
+                fig_name = os.path.join(path_eval, 'specgram/', name[:-4] + '-' + str(n_epoch) + ".jpg")
 
-            plt.subplot(3, 1, 1)
-            plt.specgram(clean, NFFT=512, Fs=fs)
-            plt.xlabel("clean specgram")
-            plt.subplot(3, 1, 2)
-            plt.specgram(noisy, NFFT=512, Fs=fs)
-            plt.subplot(3, 1, 3)
-            plt.specgram(enh, NFFT=512, Fs=fs)
-            plt.xlabel("enhance specgram")
-            plt.savefig(fig_name)
+                plt.subplot(3, 1, 1)
+                plt.specgram(clean, NFFT=512, Fs=fs)
+                plt.xlabel("clean specgram")
+                plt.subplot(3, 1, 2)
+                plt.specgram(noisy, NFFT=512, Fs=fs)
+                plt.subplot(3, 1, 3)
+                plt.specgram(enh, NFFT=512, Fs=fs)
+                plt.xlabel("enhance specgram")
+                plt.savefig(fig_name)
+

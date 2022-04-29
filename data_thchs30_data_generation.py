@@ -55,8 +55,8 @@ if __name__ == "__main__":
     # section(noise_path, noises)  # 对噪音数据进行对半切分处理
 
     # 未处理数据集存放位置
-    clean_wav_path = "dataset/data_thchs30/train/"
-    noisy_wav_path = "dataset/data_thchs30/train_noisy/"
+    clean_wav_path = "dataset/data_thchs30/test/"
+    noisy_wav_path = "dataset/data_thchs30/test_noisy/"
 
     # 处理后数据集存放位置
     catch_train_clean = "dataset/segan/data_thchs30/clean/"
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     num_person = 0  # 读取的说话人数
 
     # train_segan_chinese.scp用于存储处理好后的clean语音以及noisy语音对
-    with open("dataset/train_segan_chinese.scp", 'wt') as f:
+    with open("dataset/train_segan_chinese1.scp", 'wt') as f:
         for root, dirs, files in os.walk(clean_wav_path):
 
             current_person = ''  # 当前说话人
@@ -94,7 +94,7 @@ if __name__ == "__main__":
                 name = os.path.split(file_clean_name)[-1]  # 获取语音文件的名字
                 if name.endswith("wav"):
                     index_noisy = random.randint(0, len(noises)-1)  # 随机加入一种噪音
-                    noise_file = os.path.join(noise_path, noises[index_noisy] + '_train.wav')  # 最后面加的是测试噪声还是训练噪声
+                    noise_file = os.path.join(noise_path, noises[index_noisy] + '_test.wav')  # 最后面加的是测试噪声还是训练噪声
 
                     noise_data, sr = librosa.load(noise_file, sr=16000, mono=True)
                     clean_data, sr = librosa.load(file_clean_name, sr=16000, mono=True)
@@ -108,25 +108,25 @@ if __name__ == "__main__":
                         # noisy_data = np.asarray(mix, dtype=np.int16)
                         noisy_data = mix
                         sf.write(noisy_file, noisy_data, sr)
-                        # f.write('%s %s\n' % (noisy_file, file_clean_name))
+                        f.write('%s %s\n' % (noisy_file, file_clean_name))
 
 
 
-                        if not len(clean_data) == len(noisy_data):
-                            print("file length are not equal")
-                            continue
-
-                        # 语音分段+保存
-                        clean_slices = wav_split(clean_data, win_length, strid)
-                        clean_namelist = save_slices(clean_slices, os.path.join(catch_train_clean, name))
-
-                        # 创建噪声语音分段存储文件夹
-                        catch_train_path, _ = os.path.split(os.path.join(catch_train_noisy, noises[index_noisy], str(snr), name))
-                        os.makedirs(catch_train_path, exist_ok=True)
-
-                        # 语音分段+保存
-                        noisy_slices = wav_split(mix, win_length, strid)
-                        noisy_namelist = save_slices(noisy_slices, os.path.join(catch_train_noisy, noises[index_noisy]+"/"+str(snr)+"/"+name))
-
-                        for clean_catch_name, noisy_catch_name in zip(clean_namelist, noisy_namelist):
-                            f.write("%s %s\n" % (clean_catch_name, noisy_catch_name))
+                        # if not len(clean_data) == len(noisy_data):
+                        #     print("file length are not equal")
+                        #     continue
+                        #
+                        # # 语音分段+保存
+                        # clean_slices = wav_split(clean_data, win_length, strid)
+                        # clean_namelist = save_slices(clean_slices, os.path.join(catch_train_clean, name))
+                        #
+                        # # 创建噪声语音分段存储文件夹
+                        # catch_train_path, _ = os.path.split(os.path.join(catch_train_noisy, noises[index_noisy], str(snr), name))
+                        # os.makedirs(catch_train_path, exist_ok=True)
+                        #
+                        # # 语音分段+保存
+                        # noisy_slices = wav_split(mix, win_length, strid)
+                        # noisy_namelist = save_slices(noisy_slices, os.path.join(catch_train_noisy, str(snr)+"/"+name))
+                        #
+                        # for clean_catch_name, noisy_catch_name in zip(clean_namelist, noisy_namelist):
+                        #     f.write("%s %s\n" % (clean_catch_name, noisy_catch_name))

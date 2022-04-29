@@ -29,13 +29,22 @@ if __name__ == "__main__":
 
     os.makedirs(para.save_path, exist_ok=True)
 
+    generator_file = "save/model/proportional_distribution/G_8_0.3678.pkl"
+    discriminator_file = "save/model/proportional_distribution/G_8_0.3678.pkl"
+    load_generator = torch.load(generator_file, map_location='cpu')
+    load_discriminator = torch.load(discriminator_file, map_location='cpu')
+
     #  创建生成器
     generator = Generator()
+    generator.load_state_dict(load_generator['model'])
     generator = generator.to(device)
 
     #  创建鉴别器
     discriminator = Discriminator()
+    discriminator.load_state_dict(load_discriminator['model'])
     discriminator = discriminator.to(device)
+
+
 
     #  定义数据集，随机分布
     m_dataset = SEGAN_Dataset(para)

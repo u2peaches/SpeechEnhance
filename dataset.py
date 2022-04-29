@@ -11,10 +11,15 @@ import soundfile as sf
 class SEGAN_Dataset(Dataset):
 
     def __init__(self, para):
-        self.file_scp = para.train_scp
+        if para.train_mode == 1:
+            self.file_scp = para.train_scp_eng
+        elif para.train_mode == 2:
+            self.file_scp = para.train_scp_chi
+        else:
+            self.file_scp = para.train_scp
         files = np.loadtxt(self.file_scp, dtype='str')  # 读取data_generation中生成的clean语音以及noisy语音对
-        self.clean_files = files[:, 0].tolist()
-        self.noisy_files = files[:, 1].tolist()
+        self.clean_files = [os.path.join("../input/voicebank/", files[i, 0]) for i in range(files.shape[0])]
+        self.noisy_files = [os.path.join("../input/voicebank/", files[i, 1]) for i in range(files.shape[0])]
 
     def __len__(self):
         return len(self.clean_files)
